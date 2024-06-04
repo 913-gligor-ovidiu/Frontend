@@ -5,12 +5,11 @@ import axios from 'axios';
 import * as SecureStore from 'expo-secure-store';
 import { API_URL } from "../constants";
 import { publish } from "../event";
-import Popup from '../components/popup';
 
 
 const exerciseImages = {
   "Calf Raises": require('../assets/AparatGambe.jpg'),
-  "Running": require('../assets/Banda.jpg'),
+  "TreadMill": require('../assets/Banda.jpg'),
   "Leg Press": require('../assets/PresaPicioare.jpg'),
   "Bench Press": require('../assets/PresaPiept.jpg'),
   "Shoulder Press": require('../assets/PresaUmeri.jpg'),
@@ -31,6 +30,9 @@ const WorkoutsScreen = () => {
   const [workoutActive, setWorkoutActive] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [appointmentEndTime, setAppointmentEndTime] = useState(null);
+  const [allAppointments, setAllAppointments] = useState([]);
+  const [userAppointments, setUserAppointments] = useState([]);
+  const [exerciseStartTime, setExerciseStartTime] = useState(null);
 
 
   useEffect(() => {
@@ -72,36 +74,85 @@ const WorkoutsScreen = () => {
     }
   }, [appointmentEndTime, timerId]);
   
+  const fetchAppointmentsData = async () => {
+    const token = await SecureStore.getItemAsync('token');
+    const userJson = await SecureStore.getItemAsync('user');
+    const user = JSON.parse(userJson);
+    const userId = user.id;
+    const config = {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    };
 
-  const handleBarCodeScanned = ({ type, data }) => {
+    try {
+      // Fetch user appointments
+      const userAppointmentsResponse = await axios.get(`${API_URL}/Appointments/appointments-with-machines-for-user/${userId}`, config);
+      setUserAppointments(userAppointmentsResponse.data);
+
+      // Fetch all appointments
+      const appointmentsResponse = await axios.get(`${API_URL}/Appointments`, config);
+      setAllAppointments(appointmentsResponse.data);
+
+      return true;
+    } catch (error) {
+      console.error("Error fetching appointments data:", error);
+      return false;
+    }
+  };
+
+  const handleBarCodeScanned = async ({ type, data }) => {
     const exerciseData = JSON.parse(data);
     let formattedExercise = {};
+    const now = new Date();
+    const currentHour = now.getHours();
 
-    if (exerciseData.type === "strength") {
-      formattedExercise = {
-        exercise: exerciseData.name,
-        type: exerciseData.type,
-        repsPerSet: exerciseData.sets.map(set => set.nrOfReps),
-        weightPerSet: exerciseData.sets.map(set => set.weight)
-      };
-    } else if (exerciseData.type === "cardio") {
-      formattedExercise = {
-        exercise: exerciseData.name,
-        type: exerciseData.type,
-        distance: exerciseData.distance,
-        avg_speed: exerciseData.avg_speed,
-        max_speed: exerciseData.max_speed,
-        calories: exerciseData.calories,
-        time: exerciseData.time
-      };
+    const todayAppointments = allAppointments.find(app => new Date(app.date).toDateString() === now.toDateString());
+  
+    if (todayAppointments) {
+      const currentHourAvailability = todayAppointments.hourlyAvailability.find(hour => hour.hour === currentHour);
+
+      if (currentHourAvailability) {
+        const machineAvailability = currentHourAvailability.machineAvailabilities.find(machine => machine.machineName === exerciseData.name);
+  
+        if (machineAvailability) {
+          const userHasReservation = userAppointments.some(app => 
+            new Date(app.date).getHours() === currentHour &&
+            app.machines.some(machine => machine.machineName === exerciseData.name)
+          );
+          const hasAvailableSlot = machineAvailability.slotCount > 0;
+  
+          if (userHasReservation || hasAvailableSlot) {
+              formattedExercise = {
+                exercise: exerciseData.name,
+                type: exerciseData.type,
+            }
+            setExerciseStartTime(timer);
+            setCurrentExercise(formattedExercise);
+            setScanned(true);
+            setShowScanner(false);
+            setScannerModalVisible(false);
+            if (!workoutActive) setWorkoutActive(true);
+          } else {
+            Alert.alert("Machine Unavailable", "This machine is not reserved by you and has no available slots.");
+            setScanned(false);
+            setShowScanner(false);
+            setScannerModalVisible(false);
+            return;
+          }
+        } else {
+          Alert.alert("Machine Not Found", "This machine is not available in the current hour.");
+        }
+      } else {
+        Alert.alert("No Availability", "There is no availability information for the current hour.");
+      }
+    } else {
+      Alert.alert("No Appointments", "There are no appointments for today.");
     }
-
-    setCurrentExercise(formattedExercise);
-    setScanned(true);
-    setShowScanner(false);
-    setScannerModalVisible(false);
-    if (!workoutActive) setWorkoutActive(true);
   };
+  
+  
 
   const startTimer = () => {
     if (!timerId) {
@@ -119,11 +170,40 @@ const WorkoutsScreen = () => {
     }
   };
 
-  const handleEndExercise = () => {
-    setWorkoutData(prevWorkoutData => [...prevWorkoutData, currentExercise]);
-    setShowExerciseData(true);
-    setCurrentExercise(null);
-    setScanned(false);
+  const handleEndExercise = async () => {
+    const duration = timer - exerciseStartTime;
+    const token = await SecureStore.getItemAsync('token');
+    const config = {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    };
+
+    try {
+      let response;
+      if (currentExercise.type === "strength") {
+        response = await axios.post(`${API_URL}/Workouts/GenerateStrengthExerciseData`, {
+          exerciseName: currentExercise.exercise,
+          duration: duration
+        }, config);
+      } else if (currentExercise.type === "cardio") {
+        response = await axios.post(`${API_URL}/Workouts/GenerateCardioExerciseData`, {
+          exerciseName: currentExercise.exercise,
+          duration: duration
+        }, config);
+      }
+      const generatedExerciseData = response.data;
+
+      setWorkoutData(prevWorkoutData => [...prevWorkoutData, generatedExerciseData]);
+      setShowExerciseData(true);
+      setCurrentExercise(null);
+      setScanned(false);
+      setExerciseStartTime(null);
+    } catch (error) {
+      console.error("Error generating exercise data:", error);
+      Alert.alert("Error", "An error occurred while generating exercise data.");
+    }
   };
 
   const handleEndWorkout = async () => {
@@ -137,10 +217,8 @@ const WorkoutsScreen = () => {
         'Content-Type': 'application/json'
       }
     };
-    console.log("Workout data:", workoutData);
-    // Map internal workoutData to match API expectations
     const details = workoutData.flatMap(ex => {
-      if (ex.type === "strength" && Array.isArray(ex.repsPerSet) && Array.isArray(ex.weightPerSet)) {
+      if (ex.type === "Strength" && Array.isArray(ex.repsPerSet) && Array.isArray(ex.weightPerSet)) {
           return ex.repsPerSet.map((rep, index) => ({
               name: ex.exercise,
               reps: rep,
@@ -151,7 +229,7 @@ const WorkoutsScreen = () => {
               caloriesBurned: 0,
               time: 0
           }));
-      } else if (ex.type === "cardio") {
+      } else if (ex.type === "Cardio") {
           return [{
               name: ex.exercise,
               reps: 0,
@@ -191,6 +269,7 @@ const WorkoutsScreen = () => {
   };
 
   const canStartWorkout = async () => {
+    fetchAppointmentsData();
     const token = await SecureStore.getItemAsync('token');
     const userJson = await SecureStore.getItemAsync('user');
     const user = JSON.parse(userJson);
@@ -283,15 +362,21 @@ const WorkoutsScreen = () => {
           {workoutData.map((exercise, index) => (
             <View key={index} style={styles.exerciseContainer}>
               <Text style={styles.exerciseTitle}>{exercise.exercise}</Text>
-              {exercise.type === "strength" && exercise.repsPerSet.map((rep, setIndex) => (
+              {exercise.type === "Strength" && exercise.repsPerSet.map((rep, setIndex) => (
                 <View key={setIndex} style={styles.setRow}>
                   <Text>Set {setIndex + 1}</Text>
                   <Text>{rep} reps</Text>
                   <Text>{exercise.weightPerSet[setIndex]} kgs</Text>
                 </View>
               ))}
-              {exercise.type === "cardio" && (
-                <Text>Distance: {exercise.distance} km</Text>
+              {exercise.type === "Cardio" && (
+                <View>
+                  <Text>Distance: {exercise.distance} km</Text>
+                  <Text>Average Speed: {exercise.avgSpeed} km/h</Text>
+                  <Text>Max Speed: {exercise.maxSpeed} km/h</Text>
+                  <Text>Calories Burned: {exercise.calories} kcal</Text>
+                  <Text>Time: {exercise.time} minutes</Text>
+                </View>
               )}
             </View>
           ))}

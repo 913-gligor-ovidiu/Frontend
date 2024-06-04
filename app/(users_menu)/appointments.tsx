@@ -1,17 +1,21 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Alert, ScrollView, TouchableOpacity, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, Alert, TouchableOpacity, ScrollView, Dimensions } from 'react-native';
 import { Calendar } from 'react-native-calendars';
 import * as SecureStore from 'expo-secure-store';
 import axios from 'axios';
 import { API_URL } from '../constants';
+import MachineBookingModal from '../components/MachineBookingModal';
 
 const AppointmentsScreen = () => {
   const [userId, setUserId] = useState(null);
-  const [markedDates, setMarkedDates] = useState({});
   const [selectedDate, setSelectedDate] = useState(null);
   const [appointmentsData, setAppointmentsData] = useState({});
   const [workingHours, setWorkingHours] = useState({ startHour: 0, endHour: 24 });
   const [userAppointments, setUserAppointments] = useState([]);
+  const [machines, setMachines] = useState([]);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedHour, setSelectedHour] = useState(null);
+  const [hourlySlots, setHourlySlots] = useState([]);
 
   const fetchAppointments = async () => {
     try {
@@ -26,34 +30,24 @@ const AppointmentsScreen = () => {
 
       const allAppointmentsResponse = await axios.get(`${API_URL}/Appointments`, config);
       const allAppointments = allAppointmentsResponse.data;
+      console.log('All Appointments:', allAppointments);
 
-      // Process the working hours from the response if available
-      if (allAppointments.length > 0 && allAppointments[0].workingHours) {
-        setWorkingHours(allAppointments[0].workingHours);
-      }
-
-      // Combine data to mark dates and store appointments data
-      const combinedMarkings = allAppointments.reduce((acc, appointment) => {
-        const dateString = appointment.date.slice(0, 10);
-        if (appointment.isFull) {
-          acc[dateString] = { disabled: true, disableTouchEvent: true, dotColor: 'red', marked: true };
-        } else if (!acc[dateString]) {
-          acc[dateString] = { selected: false, selectedColor: 'grey' };
+      const formattedData = {};
+      allAppointments.forEach(appointment => {
+        const date = appointment.date.split('T')[0];
+        if (!formattedData[date]) {
+          formattedData[date] = [];
         }
+        formattedData[date] = appointment.hourlyAvailability;
+      });
 
-        // Store hourly availability data
-        appointmentsData[dateString] = appointment.hourlyAvailability;
-        return acc;
-      }, {});
-
-      setMarkedDates(combinedMarkings);
-      setAppointmentsData(appointmentsData);
+      setAppointmentsData(formattedData);
     } catch (error) {
       console.error('Failed to fetch appointments:', error);
       Alert.alert("Error", "Unable to fetch appointments");
     }
   };
-
+  
   const fetchUserAppointments = async () => {
     try {
       const token = await SecureStore.getItemAsync('token');
@@ -66,14 +60,42 @@ const AppointmentsScreen = () => {
       };
 
       const userAppointmentsResponse = await axios.get(`${API_URL}/Appointments/user/${userId}`, config);
-      const userAppointments = userAppointmentsResponse.data;
-
-      setUserAppointments(userAppointments);
+      setUserAppointments(userAppointmentsResponse.data);
     } catch (error) {
       console.error('Failed to fetch user appointments:', error);
       Alert.alert("Error", "Unable to fetch user appointments");
     }
   };
+
+  const fetchMachines = async () => {
+    try {
+      const token = await SecureStore.getItemAsync('token');
+      if (!token) {
+        Alert.alert("Error", "No token found, please login again.");
+        return;
+      }
+      const config = {
+        headers: { 'Authorization': `Bearer ${token}` }
+      };
+
+      const machinesResponse = await axios.get(`${API_URL}/Machines`, config);
+      setMachines(machinesResponse.data);
+      console.log('Machines:', machinesResponse.data);
+    } catch (error) {
+      console.error('Failed to fetch machines:', error);
+      Alert.alert("Error", "Unable to fetch machines");
+    }
+  };
+
+  const fetchWorkingHours = async () => {
+    try {
+      const workingHoursResponse = await axios.get(`${API_URL}/Appointments/getWorkingHours`);
+      setWorkingHours(workingHoursResponse.data);
+    } catch (error) {
+      console.error('Failed to fetch working hours:', error);
+      Alert.alert("Error", "Unable to fetch working hours");
+    }
+  }
 
   useEffect(() => {
     const fetchUserId = async () => {
@@ -91,48 +113,42 @@ const AppointmentsScreen = () => {
       }
     };
     fetchUserId();
-  }, []);  // This runs only on component mount
+  }, []);
 
   useEffect(() => {
-    if (!userId) return; // Do not proceed if userId is not set
+    if (!userId) return;
     fetchAppointments();
     fetchUserAppointments();
-  }, [userId]); // This effect runs when userId changes
+    fetchMachines();
+    fetchWorkingHours();
+  }, [userId]);
 
   const handleDayPress = (day) => {
     const dateString = day.dateString;
     setSelectedDate(dateString);
-    generateHourlySlots(dateString);
+    setHourlySlots(generateHourlySlots(dateString));
   };
 
-  const generateHourlySlots = (dateString) => {
-    const slots = [];
-    for (let hour = workingHours.startHour; hour < workingHours.endHour; hour++) {
-      const slot = appointmentsData[dateString]?.find(slot => slot.hour === hour) || {
-        hour,
-        spotsLeft: 7,
-        isFull: false
-      };
-
-      // Check if the user has an appointment in this slot
-      const userAppointment = userAppointments.find(
-        appointment => appointment.date.slice(0, 10) === dateString && new Date(appointment.date).getHours() === hour
-      );
-      slots.push({ ...slot, userAppointment });
+  const handleHourPress = (hour) => {
+    if (userHasAppointment(hour)) {
+      const appointmentId = getUserAppointmentId(hour);
+      cancelAppointment(appointmentId);
+    } else {
+      setSelectedHour(hour);
+      setModalVisible(true);
     }
-    return slots;
   };
 
-  const bookAppointment = async (dateString, hour) => {
-    const [year, month, day] = dateString.split('-').map(Number);
+  const bookAppointment = async (hour, machineBookings) => {
+    const [year, month, day] = selectedDate.split('-').map(Number);
     const formattedDate = new Date(Date.UTC(year, month - 1, day, hour)).toISOString();
 
     const appointmentData = {
       UserId: userId,
-      Date: formattedDate
+      Date: formattedDate,
+      MachineBookings: machineBookings
     };
 
-    console.log('Booking appointment with:', appointmentData); // Debugging log
     try {
       const token = await SecureStore.getItemAsync('token');
       if (!token) {
@@ -149,16 +165,15 @@ const AppointmentsScreen = () => {
       const response = await axios.post(apiUrl, appointmentData, config);
       if (response.status === 201) {
         Alert.alert("Success", "Your appointment has been booked!");
-        await fetchAppointments(); // Refresh appointments after booking
-        await fetchUserAppointments(); // Refresh user appointments after booking
+        await fetchAppointments();
+        await fetchUserAppointments();
       } else {
         Alert.alert("Failed", "Failed to book the appointment.");
       }
     } catch (error) {
       console.error('Error booking appointment:', error);
       if (error.response) {
-        console.log('Error response data:', error.response.data); // Additional error logging
-        Alert.alert("Error", `Booking failed: You already have an appointment on this day.`);
+        Alert.alert("Error", `Booking failed: ${error.response.data}`);
       } else {
         Alert.alert("Error", "An unexpected error occurred. Please try again.");
       }
@@ -172,73 +187,55 @@ const AppointmentsScreen = () => {
         Alert.alert("Error", "No token found, please login again.");
         return;
       }
-      const apiUrl = `${API_URL}/Appointments/${appointmentId}`;
       const config = {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+        headers: { 'Authorization': `Bearer ${token}` }
       };
-      const response = await axios.delete(apiUrl, config);
+
+      const response = await axios.delete(`${API_URL}/Appointments/${appointmentId}`, config);
       if (response.status === 204) {
-          Alert.alert("Success", "Your appointment has been canceled.");
-          await fetchUserAppointments(); 
-          await fetchAppointments(); 
+        Alert.alert("Success", "Your appointment has been cancelled!");
+        await fetchAppointments();
+        await fetchUserAppointments();
       } else {
         Alert.alert("Failed", "Failed to cancel the appointment.");
       }
     } catch (error) {
-      console.error('Error canceling appointment:', error);
-      if (error.response) {
-        console.log('Error response data:', error.response.data); // Additional error logging
-        Alert.alert("Error", `Cancelation failed: ${error.response.data.message}`);
-      } else {
-        Alert.alert("Error", "An unexpected error occurred. Please try again.");
-      }
+      console.error('Error cancelling appointment:', error);
+      Alert.alert("Error", "Unable to cancel appointment");
     }
   };
 
-  const handleHourPress = async (slot) => {
-    const now = new Date();
-    const appointmentDateTime = new Date(selectedDate);
-    appointmentDateTime.setHours(slot.hour, 0, 0, 0);
+  const userHasAppointment = (hour) => {
+    return userAppointments.some(app => new Date(app.date).getHours() === hour && new Date(app.date).toDateString() === new Date(selectedDate).toDateString());
+  };
 
-    if (slot.userAppointment) {
-      if (now > appointmentDateTime) {
-        Alert.alert("Cannot Cancel", "You cannot cancel an appointment that has already passed.");
-        return;
-      }
-      Alert.alert(
-        "Cancel Appointment",
-        `Do you want to cancel your appointment at ${slot.hour}:00?`,
-        [
-          {
-            text: "Yes",
-            onPress: () => cancelAppointment(slot.userAppointment.id),
-          },
-          {
-            text: "No",
-          },
-        ]
-      );
-    } else {
-      // if (now > appointmentDateTime) {
-      //   Alert.alert("Cannot Book", "You cannot book an appointment for a past date.");
-      //   return;
-      // }
-      Alert.alert(
-        "Confirm Appointment",
-        `Do you want to book an appointment at ${slot.hour}:00?`,
-        [
-          {
-            text: "Yes",
-            onPress: () => bookAppointment(selectedDate, slot.hour),
-          },
-          {
-            text: "No",
-          },
-        ]
-      );
+  const getUserAppointmentId = (hour) => {
+    const appointment = userAppointments.find(app => new Date(app.date).getHours() === hour && new Date(app.date).toDateString() === new Date(selectedDate).toDateString());
+    return appointment?.id;
+  };
+
+  const generateHourlySlots = (dateString) => {
+    const slots = [];
+    console.log('Appointments data for', dateString, ':', appointmentsData[dateString]);
+
+    for (let hour = workingHours.startHour; hour < workingHours.endHour; hour++) {
+      const hourlyData = appointmentsData[dateString]?.find(slot => slot.hour === hour)?.machineAvailabilities || [];
+      console.log('Hourly data for', hour, ':', hourlyData);
+
+      const hourSlots = machines.map(machine => {
+        const machineData = hourlyData.find(data => data.machineId === machine.id) || {};
+        return {
+          machineId: machine.id,
+          machineName: machine.name,
+          type: machine.type,
+          slotsLeft: machineData.slotCount !== undefined ? machineData.slotCount : (machine.type === 'Strength' ? 4 : 2)
+        };
+      });
+
+      slots.push({ hour, slots: hourSlots });
     }
+
+    return slots;
   };
 
   return (
@@ -252,7 +249,6 @@ const AppointmentsScreen = () => {
         monthFormat={'yyyy MM'}
         hideExtraDays={true}
         hideArrows={false}
-        markedDates={markedDates}
         style={styles.calendar}
         theme={{
           calendarBackground: '#ffffff',
@@ -280,27 +276,31 @@ const AppointmentsScreen = () => {
       {selectedDate && (
         <ScrollView style={styles.scrollView}>
           <Text style={styles.subtitle}>Available slots for {selectedDate}:</Text>
-          {generateHourlySlots(selectedDate).map(slot => (
+          {hourlySlots.map((slot, index) => (
             <TouchableOpacity
-              key={slot.hour}
+              key={`${slot.hour}-${index}`}
               style={[
                 styles.hourSlot,
-                slot.isFull && styles.fullSlot,
-                slot.userAppointment && styles.userAppointmentSlot,
+                userHasAppointment(slot.hour) ? styles.userAppointmentSlot : null
               ]}
-              disabled={slot.isFull}
-              onPress={() => handleHourPress(slot)}
+              onPress={() => handleHourPress(slot.hour)}
             >
-              <Text style={styles.hourText}>
-                {`${slot.hour}:00`} - Spots Left: {slot.spotsLeft}
-              </Text>
-              {slot.userAppointment && (
-                <Text style={styles.cancelText}>Tap to cancel</Text>
+              <Text style={styles.hourText}>{`${slot.hour}:00`}</Text>
+              {userHasAppointment(slot.hour) && (
+                <Text style={styles.cancelText}>Cancel appointment</Text>
               )}
             </TouchableOpacity>
           ))}
         </ScrollView>
       )}
+      <MachineBookingModal
+        visible={modalVisible}
+        onClose={() => setModalVisible(false)}
+        hour={selectedHour}
+        machines={machines}
+        slots={hourlySlots.find(slot => slot.hour === selectedHour)?.slots || []}
+        onBook={bookAppointment}
+      />
     </View>
   );
 };
@@ -354,19 +354,17 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     alignItems: 'center',
   },
-  fullSlot: {
-    backgroundColor: '#ffcccb',
-  },
   userAppointmentSlot: {
-    backgroundColor: '#c8e6c9',
+    backgroundColor: '#d4edda',
   },
   hourText: {
     fontSize: 16,
     color: '#2d4059',
   },
   cancelText: {
-    fontSize: 12,
     color: '#d9534f',
+    marginTop: 5,
+    fontSize: 14,
   },
 });
 
