@@ -99,7 +99,7 @@ const CompetitionsScreen = () => {
     <Pressable
       style={item.userId === currentUserId ? styles.highlightedLeaderboardEntry : styles.leaderboardEntry}
       onPress={() => {
-        router.navigate(`${item.userId}`)
+        router.push({ pathname: '/[userid]', params: { userid: `${item.userId}` } })
       }}>
       <Text style={styles.username}>{item.username}</Text>
       <Text style={styles.score}>{item.points} points</Text>

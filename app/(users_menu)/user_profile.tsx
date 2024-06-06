@@ -115,6 +115,9 @@ const ProfilePage = () => {
                 ) : (
                     <Text>No user profile data available.</Text>
                 )}
+                <Pressable style={styles.button} onPress={logOut}>
+                    <Text style={styles.buttonText}>Logout</Text>
+                </Pressable>
                 {workouts.length > 0 ? (
                     <View style={styles.workoutContainer}>
                         <Text style={styles.workoutTitle}>Workout History</Text>
@@ -134,9 +137,6 @@ const ProfilePage = () => {
                 ) : (
                     <Text>No workout history available.</Text>
                 )}
-                <Pressable style={styles.button} onPress={logOut}>
-                    <Text style={styles.buttonText}>Logout</Text>
-                </Pressable>
             </ScrollView>
         </SafeAreaView>
     );

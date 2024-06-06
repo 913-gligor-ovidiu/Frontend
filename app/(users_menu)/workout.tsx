@@ -194,12 +194,18 @@ const WorkoutsScreen = () => {
         }, config);
       }
       const generatedExerciseData = response.data;
+      if(generatedExerciseData.type === "Strength" && generatedExerciseData.repsPerSet.length > 0) {
+        setWorkoutData(prevWorkoutData => [...prevWorkoutData, generatedExerciseData]);
+      }
+      else if(generatedExerciseData.type === "Cardio" && generatedExerciseData.distance.time > 120) {
+        setWorkoutData(prevWorkoutData => [...prevWorkoutData, generatedExerciseData]);
+       }
 
-      setWorkoutData(prevWorkoutData => [...prevWorkoutData, generatedExerciseData]);
       setShowExerciseData(true);
       setCurrentExercise(null);
       setScanned(false);
       setExerciseStartTime(null);
+      
     } catch (error) {
       console.error("Error generating exercise data:", error);
       Alert.alert("Error", "An error occurred while generating exercise data.");
@@ -207,6 +213,17 @@ const WorkoutsScreen = () => {
   };
 
   const handleEndWorkout = async () => {
+    if(workoutData.length === 0) {
+      setWorkoutData([]);
+      setTimer(0);
+      setShowExerciseData(false);
+      setWorkoutActive(false);
+      setAppointmentEndTime(null);
+      setCurrentExercise(null);
+      setScanned(false);
+      return;
+    }
+
     const token = await SecureStore.getItemAsync('token');
     const userJson = await SecureStore.getItemAsync('user');
     const user = JSON.parse(userJson);
@@ -375,7 +392,7 @@ const WorkoutsScreen = () => {
                   <Text>Average Speed: {exercise.avgSpeed} km/h</Text>
                   <Text>Max Speed: {exercise.maxSpeed} km/h</Text>
                   <Text>Calories Burned: {exercise.calories} kcal</Text>
-                  <Text>Time: {exercise.time} minutes</Text>
+                  <Text>Time: {exercise.time} seconds</Text>
                 </View>
               )}
             </View>
@@ -387,7 +404,7 @@ const WorkoutsScreen = () => {
           <Text style={styles.buttonText}>End Exercise</Text>
         </TouchableOpacity>
       }
-      {workoutData.length > 0 && (
+      {workoutActive  && (
         <TouchableOpacity style={styles.button} onPress={handleEndWorkout}>
           <Text style={styles.buttonText}>End Workout</Text>
         </TouchableOpacity>

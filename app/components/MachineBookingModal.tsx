@@ -3,6 +3,17 @@ import { View, Text, Modal, StyleSheet, TouchableOpacity, ScrollView, Alert, Dim
 import { CheckBox } from '@rneui/base';
 import DropDownPicker from 'react-native-dropdown-picker';
 
+const exerciseImages = {
+  "Calf Raises": require('../assets/AparatGambe.jpg'),
+  "TreadMill": require('../assets/Banda.jpg'),
+  "Leg Press": require('../assets/PresaPicioare.jpg'),
+  "Bench Press": require('../assets/PresaPiept.jpg'),
+  "Shoulder Press": require('../assets/PresaUmeri.jpg'),
+  "RowingMachine": require('../assets/Ramat.jpg'),
+  "Lateral Raises": require('../assets/RidicariUmeri.jpg'),
+};
+
+
 const MachineBookingModal = ({ visible, onClose, hour, machines, slots, onBook }) => {
   const [selectedMachines, setSelectedMachines] = useState([]);
   const [totalMinutes, setTotalMinutes] = useState(0);

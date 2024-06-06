@@ -38,7 +38,7 @@ export default () => {
                 }}
             />
             <Tabs.Screen
-                name="[id]"
+                name="[userid]"
                 options={{
                     href: null,
                     headerTitle: 'User Profile',
