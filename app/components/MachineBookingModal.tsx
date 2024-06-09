@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Modal, StyleSheet, TouchableOpacity, ScrollView, Alert, Dimensions } from 'react-native';
+import { View, Text, Modal, StyleSheet, TouchableOpacity, ScrollView, Alert, Dimensions, Image } from 'react-native';
 import { CheckBox } from '@rneui/base';
 import DropDownPicker from 'react-native-dropdown-picker';
 
@@ -11,6 +11,7 @@ const exerciseImages = {
   "Shoulder Press": require('../assets/PresaUmeri.jpg'),
   "RowingMachine": require('../assets/Ramat.jpg'),
   "Lateral Raises": require('../assets/RidicariUmeri.jpg'),
+  "StepMachine": require('../assets/StepMachine.jpg'),
 };
 
 
@@ -111,6 +112,12 @@ const MachineBookingModal = ({ visible, onClose, hour, machines, slots, onBook }
 
               return (
                 <View key={machine.id} style={[styles.machineContainer, { zIndex: slots.length - index }]}>
+                  <View style={styles.imageContainer}>
+                    <Image 
+                    source={exerciseImages[machine.name]} 
+                    style={styles.machineImage} 
+                    resizeMode='contain'/>
+                  </View>
                   <View style={styles.machineInfoContainer}>
                     <CheckBox
                       checked={isSelected}
@@ -182,11 +189,22 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   scrollView: {
-    paddingBottom: 100,  // Added padding to ensure space for dropdowns
+    paddingBottom: 100,  
   },
   machineContainer: {
     marginBottom: 10,
     width: '100%',
+  },
+  imageContainer: {
+    width: '100%',
+    height: 150,
+    marginBottom: 5,
+  },
+  machineImage: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
+    borderRadius: 5,
   },
   machineInfoContainer: {
     flexDirection: 'row',
@@ -243,3 +261,4 @@ const styles = StyleSheet.create({
 });
 
 export default MachineBookingModal;
+

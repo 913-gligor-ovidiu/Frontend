@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, Button, Modal, StyleSheet, Alert, Platform, TextInput, Keyboard, TouchableWithoutFeedback } from 'react-native';
+import { View, Text, FlatList, Button, Modal, StyleSheet, Alert, Platform, TextInput, TouchableWithoutFeedback, Keyboard } from 'react-native';
 import axios from 'axios';
 import * as SecureStore from 'expo-secure-store';
 import { API_URL } from '../constants';
@@ -10,13 +10,13 @@ if (Platform.OS !== 'web') {
 }
 
 const ManageUsersAppointments = () => {
-  const [originalUsers, setOriginalUsers] = useState([]); // Store original users data
+  const [originalUsers, setOriginalUsers] = useState([]); 
   const [users, setUsers] = useState([]);
   const [date, setDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [isFilterActive, setIsFilterActive] = useState(false);
-  const [startHour, setStartHour] = useState(''); // Admin input for start hour
-  const [endHour, setEndHour] = useState(''); // Admin input for end hour
+  const [startHour, setStartHour] = useState(''); 
+  const [endHour, setEndHour] = useState(''); 
 
   const fetchData = async (applyFilter = false) => {
     const token = await SecureStore.getItemAsync('token');
@@ -49,7 +49,7 @@ const ManageUsersAppointments = () => {
     setShowDatePicker(Platform.OS === 'ios');
     setDate(currentDate);
     setIsFilterActive(true);
-    setUsers(filterUsersByDate(originalUsers, currentDate)); // Filter from original users data
+    setUsers(filterUsersByDate(originalUsers, currentDate)); 
   };
 
   const filterUsersByDate = (usersData, selectedDate) => {
@@ -70,7 +70,7 @@ const ManageUsersAppointments = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (response.status === 204) {
-        fetchData(isFilterActive);  // Refresh the appointments and apply filter if active
+        fetchData(isFilterActive);  
       } else {
         Alert.alert("Failed", "Failed to cancel the appointment.");
       }
@@ -83,7 +83,7 @@ const ManageUsersAppointments = () => {
   const resetFilter = () => {
     setDate(new Date());
     setIsFilterActive(false);
-    setUsers(originalUsers);  // Reset to original users data
+    setUsers(originalUsers);  
   };
 
   const setWorkingHours = async () => {
@@ -182,49 +182,52 @@ const ManageUsersAppointments = () => {
   };
 
   return (
-        <View style={styles.container}>
-          <View style={styles.workingHoursContainer}>
-            <Text style={styles.subtitle}>Set Working Hours</Text>
-            <View style={styles.inputRow}>
-              <View style={styles.inputContainer}>
-                <Text style={styles.inputLabel}>Start Hour</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Start Hour"
-                  keyboardType="numeric"
-                  value={startHour}
-                  onChangeText={setStartHour}
-                  maxLength={2} // Limit input to 2 digits
-                />
-              </View>
-              <View style={styles.inputContainer}>
-                <Text style={styles.inputLabel}>End Hour</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="End Hour"
-                  keyboardType="numeric"
-                  value={endHour}
-                  onChangeText={setEndHour}
-                  maxLength={2} // Limit input to 2 digits
-                />
-              </View>
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+      <View style={styles.container}>
+        <View style={styles.workingHoursContainer}>
+          <Text style={styles.subtitle}>Set Working Hours</Text>
+          <View style={styles.inputRow}>
+            <View style={styles.inputContainer}>
+              <Text style={styles.inputLabel}>Start Hour</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Start Hour"
+                placeholderTextColor="#999"
+                keyboardType="numeric"
+                value={startHour}
+                onChangeText={setStartHour}
+                maxLength={2} 
+              />
             </View>
-            <Button title="Set Working Hours" onPress={setWorkingHours} />
+            <View style={styles.inputContainer}>
+              <Text style={styles.inputLabel}>End Hour</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="End Hour"
+                placeholderTextColor="#999"
+                keyboardType="numeric"
+                value={endHour}
+                onChangeText={setEndHour}
+                maxLength={2} 
+              />
+            </View>
           </View>
-          {isFilterActive && <Text style={styles.title}>Filtered by date: {date.toDateString()}</Text>}
-          <Button onPress={() => setShowDatePicker(true)} title="Search user appointments by date" />
-          {renderDatePickerModal()}
-          <FlatList
-            data={users}
-            keyExtractor={(item) => item.username}
-            renderItem={renderUserAppointments}
-            style={styles.userList}
-          />
-          <View style={styles.resetButton}>
-            <Button onPress={resetFilter} title="Reset" color="#007bff" />
-          </View>
+          <Button title="Set Working Hours" onPress={setWorkingHours} />
         </View>
-
+        {isFilterActive && <Text style={styles.title}>Filtered by date: {date.toDateString()}</Text>}
+        <Button onPress={() => setShowDatePicker(true)} title="Search user appointments by date" />
+        {renderDatePickerModal()}
+        <FlatList
+          data={users}
+          keyExtractor={(item) => item.username}
+          renderItem={renderUserAppointments}
+          style={styles.userList}
+        />
+        <View style={styles.resetButton}>
+          <Button onPress={resetFilter} title="Reset" color="black" />
+        </View>
+      </View>
+    </TouchableWithoutFeedback>
   );
 };
 
@@ -232,22 +235,22 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
-    backgroundColor: '#ffffff', // Light background for better readability
+    backgroundColor: '#111827', 
   },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#333333', // Dark grey for high contrast text
+    color: '#F3F4F6', 
     marginBottom: 15,
   },
   userList: {
     marginTop: 15,
   },
   userContainer: {
-    flexDirection: 'column', // Change to column for better mobile visibility
+    flexDirection: 'column', 
     padding: 15,
     marginBottom: 10,
-    backgroundColor: '#f7f7f7', // Light grey for subtle differentiation
+    backgroundColor: '#1F2937', 
     borderRadius: 10,
     shadowColor: '#000000',
     shadowOffset: { width: 0, height: 1 },
@@ -259,24 +262,24 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 18,
     marginBottom: 5,
-    color: '#2C3E50', // Darker shade for text
+    color: '#E5E7EB', 
   },
   appointmentItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: 10,
-    backgroundColor: '#ECF0F1', // Lighter grey for appointments
+    backgroundColor: '#374151', 
     borderRadius: 5,
     marginTop: 5,
   },
   appointmentDate: {
     fontSize: 16,
-    color: '#34495E', // Soft black
+    color: '#D1D5DB', 
   },
   resetButton: {
     marginTop: 15,
-    backgroundColor: '#3498DB', // Blue button for actions
+    backgroundColor: '#2563EB', 
     borderRadius: 5,
   },
   centeredView: {
@@ -286,7 +289,7 @@ const styles = StyleSheet.create({
   },
   modalView: {
     margin: 20,
-    backgroundColor: 'white',
+    backgroundColor: '#1F2937', 
     borderRadius: 20,
     padding: 35,
     alignItems: 'center',
@@ -307,7 +310,7 @@ const styles = StyleSheet.create({
   workingHoursContainer: {
     marginBottom: 20,
     padding: 15,
-    backgroundColor: '#f7f7f7',
+    backgroundColor: '#1F2937',
     borderRadius: 10,
     shadowColor: '#000000',
     shadowOffset: { width: 0, height: 1 },
@@ -318,7 +321,7 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#333333',
+    color: '#F3F4F6',
     marginBottom: 10,
     textAlign: 'center',
   },
@@ -332,15 +335,17 @@ const styles = StyleSheet.create({
   },
   inputLabel: {
     fontSize: 14,
-    color: '#333333',
+    color: '#F3F4F6',
     marginBottom: 5,
   },
   input: {
     height: 40,
-    borderColor: '#cccccc',
+    borderColor: '#374151',
     borderWidth: 1,
     borderRadius: 5,
     paddingLeft: 10,
+    backgroundColor: '#374151',
+    color: '#F3F4F6', 
   },
 });
 

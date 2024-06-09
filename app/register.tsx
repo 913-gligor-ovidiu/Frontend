@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { StyleSheet, Text, View, TextInput, Button, Image, TouchableOpacity, ScrollView, KeyboardAvoidingView } from "react-native";
-import * as ImagePicker from 'expo-image-picker';
 import { styles } from "./styles/register_style";
 import { registerUser } from "./Logic/registrationService";
 import { useRouter } from "expo-router";
@@ -18,13 +17,11 @@ const RegisterPage = () => {
   const router = useRouter();
 
   const handleRegister = async () => {
-    // Validate input
     if (!firstName || !lastName || !userName || !age || !height || !weight || !sex || !password) {
       alert("Please fill in all fields");
       return;
     }
     
-    // Prepare user data
     const userData = {
       firstName,
       lastName,
@@ -39,7 +36,6 @@ const RegisterPage = () => {
     const registrationResult = await registerUser(userData);
     if (registrationResult == true) {
       alert("Registration successful");
-      //router.replace("/");
       router.back();
     } else {
       alert("Registration failed: " + registrationResult);
@@ -106,7 +102,7 @@ const RegisterPage = () => {
                   if (!isNaN(parsedValue)) {
                     setAge(parsedValue);
                   } else {
-                    setAge(0); // Clear the age if the input is not a valid number
+                    setAge(0); 
                   }
                 }}
                 value={age.toString()}
@@ -124,7 +120,7 @@ const RegisterPage = () => {
                   if (!isNaN(parsedValue)) {
                     setHeight(parsedValue);
                   } else {
-                    setHeight(0); // Clear the height if the input is not a valid number
+                    setHeight(0); 
                   }
                 } }
                 value={height.toString()}
@@ -142,7 +138,7 @@ const RegisterPage = () => {
                   if (!isNaN(parsedValue)) {
                     setWeight(parsedValue);
                   } else {
-                    setWeight(0); // Clear the weight if the input is not a valid number
+                    setWeight(0); 
                   }
                 }}
                 value={weight.toString()}

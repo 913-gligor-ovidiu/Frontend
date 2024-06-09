@@ -9,7 +9,7 @@ export const createCompetition = async (competitionData) => {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${await SecureStore.getItemAsync('token')}`, // Assuming token-based auth
+                'Authorization': `Bearer ${await SecureStore.getItemAsync('token')}`, 
             },
             body: JSON.stringify(competitionData),
         });
@@ -17,15 +17,15 @@ export const createCompetition = async (competitionData) => {
         if (response.ok) {
             const data = await response.json();
             console.log('Competition Created Successfully:', data);
-            return { success: true, data: data };  // Return success and data for further processing
+            return { success: true, data: data };  
         } else {
             const errorMessage = await response.text();
             alert('Failed to create competition: ' + errorMessage);
-            return { success: false, message: errorMessage };  // Return error message for UI feedback
+            return { success: false, message: errorMessage };  
         }
     } catch (error) {
         console.error('Error creating competition:', error);
         alert('Failed to create competition. Please try again.');
-        return { success: false, message: error.message };  // Return error message for UI feedback
+        return { success: false, message: error.message };  
     }
 };

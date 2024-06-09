@@ -3,8 +3,8 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
 import axios from 'axios';
-import { API_URL } from '../constants';
-import { subscribe } from '../event';
+import { API_URL } from '../../constants';
+import { subscribe } from '../../event';
 
 const ManageCompetitions = () => {
     const router = useRouter();
@@ -56,7 +56,7 @@ const ManageCompetitions = () => {
     if (error) {
         return (
             <View style={styles.center}>
-                <Text>Error: {error}</Text>
+                <Text style={styles.errorText}>Error: {error}</Text>
             </View>
         );
     }
@@ -65,27 +65,20 @@ const ManageCompetitions = () => {
         <View style={styles.container}>
             <ScrollView style={styles.scrollView}>
                 {competitions.map((competition) => (
-                    <View key={competition.id} style={styles.card}>
+                    <TouchableOpacity
+                        key={competition.id}
+                        style={styles.card}
+                        onPress={() => router.push(`competitions_menu/${competition.id}`)}
+                    >
                         <Text style={styles.title}>{competition.name}</Text>
-                        <Text style={styles.details}>{`Code: ${competition.code}`}</Text>
                         <Text style={styles.details}>{`Start Date: ${new Date(competition.startDate).toLocaleDateString()}`}</Text>
                         <Text style={styles.details}>{`End Date: ${new Date(competition.endDate).toLocaleDateString()}`}</Text>
-                        <Text style={styles.details}>{`Type: ${competition.competitionType}`}</Text>
-                        <Text style={styles.details}>{`Description: ${competition.description}`}</Text>
-                        <Text style={styles.details}>{`Machines: ${competition.machines}`}</Text>
-                        {competition.participants.length > 0 ? (
-                            competition.participants.map((participant, index) => (
-                                <Text key={index} style={styles.participant}>{participant.username} - Points: {participant.points}</Text>
-                            ))
-                        ) : (
-                            <Text style={styles.noParticipants}>No participants yet.</Text>
-                        )}
-                    </View>
+                    </TouchableOpacity>
                 ))}
             </ScrollView>
             <TouchableOpacity
                 style={styles.fab}
-                onPress={() => { router.push('create_competition'); }}
+                onPress={() => { router.push('/competitions_menu/create_competition'); }}
             >
                 <Text style={styles.fabIcon}>+</Text>
             </TouchableOpacity>
@@ -96,18 +89,19 @@ const ManageCompetitions = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#f9f9f9'
+        backgroundColor: '#111827', 
+        paddingTop: 30,
     },
     scrollView: {
-        flex: 1
+        flex: 1,
     },
     center: {
         flex: 1,
         justifyContent: 'center',
-        alignItems: 'center'
+        alignItems: 'center',
     },
     card: {
-        backgroundColor: '#ffffff',
+        backgroundColor: '#1F2937', 
         borderRadius: 10,
         padding: 20,
         marginVertical: 8,
@@ -125,23 +119,12 @@ const styles = StyleSheet.create({
         fontSize: 22,
         fontWeight: 'bold',
         marginBottom: 5,
-        color: '#333'
+        color: '#F3F4F6', 
     },
     details: {
         fontSize: 16,
         marginBottom: 4,
-        color: '#666'
-    },
-    participant: {
-        fontSize: 14,
-        marginTop: 2,
-        marginLeft: 10,
-        color: '#444'
-    },
-    noParticipants: {
-        fontSize: 14,
-        fontStyle: 'italic',
-        color: '#888'
+        color: '#E5E7EB', 
     },
     fab: {
         position: 'absolute',
@@ -153,12 +136,15 @@ const styles = StyleSheet.create({
         bottom: 25,
         backgroundColor: '#03A9F4',
         borderRadius: 30,
-        elevation: 12
+        elevation: 12,
     },
     fabIcon: {
         fontSize: 26,
-        color: 'white'
-    }
+        color: 'white',
+    },
+    errorText: {
+        color: 'white', 
+    },
 });
 
 export default ManageCompetitions;

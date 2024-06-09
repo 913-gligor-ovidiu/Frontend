@@ -14,7 +14,7 @@ export default () => {
                 }}
             />
             <Tabs.Screen 
-                name="competitions"
+                name="competition_screen"
                 options={{
                     tabBarLabel: 'Competitions',
                     headerTitle: 'Manage Competitions',
@@ -27,6 +27,14 @@ export default () => {
                     tabBarLabel: 'Workout',
                     headerTitle: 'Workout',
                     tabBarIcon: ({color,size}) => <FontAwesome6 name='dumbbell' size={size} color={color} />
+                }}
+            />
+            <Tabs.Screen
+                name="competition_history"
+                options={{
+                    headerTitle: 'Competition History',
+                    tabBarLabel: 'History',
+                    tabBarIcon: ({color,size}) => <FontAwesome name="history" size={size} color={color} />
                 }}
             />
             <Tabs.Screen 

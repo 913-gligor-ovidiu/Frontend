@@ -24,14 +24,14 @@ export const registerUser = async (userData) => {
     });
 
     if (response.status >= 200 && response.status < 300) {
-      return true; // Registration successful
+      return true; 
     } else {
-      const errorMessage = await response.text(); // Extract error message from response
-      return errorMessage; // Return error message
+      const errorMessage = await response.text(); 
+      return errorMessage; 
     }
   } catch (error) {
     console.error('Error registering user:', error);
-    return error.message; // Return error message
+    return error.message; 
   }
 };
   

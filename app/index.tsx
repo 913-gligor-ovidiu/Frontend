@@ -1,7 +1,7 @@
 import { Pressable, StyleSheet, Text, TextInput, View, ScrollView } from "react-native";
 import { useState } from "react"; 
 import { Link, useRouter } from "expo-router";
-import { styles } from "./styles/register_style"; // Importing styles from the provided file
+import { styles } from "./styles/register_style"; 
 import { loginUser } from "./Logic/loginService";
 import * as SecureStore from 'expo-secure-store';
 
@@ -27,9 +27,9 @@ const LoginPage = () => {
       const userJson = await SecureStore.getItemAsync('user');
       const user = JSON.parse(userJson);
       if (user.isAdmin) {
-        router.replace('/users'); // Admins go to the users management page
+        router.replace('/users'); 
       } else {
-        router.replace('/workout'); // Regular users go to the workout page
+        router.replace('/workout'); 
       }
     } else {
       alert("Login failed: " + loginResult);

@@ -68,7 +68,7 @@ const CompetitionsScreen = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
       Alert.alert("Success", "Joined competition successfully!");
-      fetchCompetitionForUser(); // Refresh competition data
+      fetchCompetitionForUser(); 
     } catch (error) {
       console.error('Failed to join competition:', error);
       Alert.alert("Error", "Failed to join competition: " + (error.response.data || "Unknown error"));
@@ -88,19 +88,20 @@ const CompetitionsScreen = () => {
       Alert.alert("Success", "You have successfully unenrolled from the competition.");
       setIsEnrolled(false);
       setCurrentCompetition(null);
-      fetchCompetitionForUser(); // Optionally refresh data
+      fetchCompetitionForUser(); 
     } catch (error) {
       console.error('Failed to unenroll from competition:', error);
       Alert.alert("Error", "Failed to unenroll from competition: " + (error.response?.data || "Unknown error"));
     }
   };
 
-  const renderItem = ({ item }) => (
+  const renderItem = ({ item, index }) => (
     <Pressable
       style={item.userId === currentUserId ? styles.highlightedLeaderboardEntry : styles.leaderboardEntry}
       onPress={() => {
         router.push({ pathname: '/[userid]', params: { userid: `${item.userId}` } })
       }}>
+      <Text style={styles.position}>{index + 1}.</Text>
       <Text style={styles.username}>{item.username}</Text>
       <Text style={styles.score}>{item.points} points</Text>
     </Pressable>
@@ -116,6 +117,9 @@ const CompetitionsScreen = () => {
               <Text style={styles.exitButtonText}>Exit</Text>
             </Pressable>
           </View>
+          <Text style={styles.endDateText}>
+              Ends On: <Text style={styles.endDateValue}>{new Date(currentCompetition.endDate).toLocaleDateString()}</Text>
+          </Text>
           <View style={styles.competitionDetails}>
             <View style={styles.detailRow}>
               <Text style={styles.detailLabel}>Type:</Text>
@@ -127,15 +131,11 @@ const CompetitionsScreen = () => {
             </View>
             <View style={styles.detailRow}>
               <Text style={styles.detailLabel}>Machines:</Text>
-              <Text style={styles.detailValue}>{currentCompetition.machines}</Text>
+              <Text style={styles.detailValue}>{currentCompetition.machines.join(', ')}</Text>
             </View>
             <View style={styles.detailRow}>
               <Text style={styles.detailLabel}>Start Date:</Text>
               <Text style={styles.detailValue}>{new Date(currentCompetition.startDate).toLocaleDateString()}</Text>
-            </View>
-            <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>End Date:</Text>
-              <Text style={styles.detailValue}>{new Date(currentCompetition.endDate).toLocaleDateString()}</Text>
             </View>
           </View>
           <FlatList
@@ -177,7 +177,20 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFF',
     borderBottomWidth: 1,
     borderBottomColor: '#DDE2E5',
-    alignItems: 'center',
+    alignItems: 'flex-start',
+  },
+  highlightedLeaderboardEntry: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    backgroundColor: '#E3FCEF',
+    borderBottomWidth: 1,
+    borderBottomColor: '#DDE2E5',
+    alignItems:'flex-start' ,
+  },
+  position: {
+    fontWeight: 'bold',
   },
   username: {
     fontSize: 18,
@@ -218,16 +231,6 @@ const styles = StyleSheet.create({
     width: '100%',
     alignItems: 'center',
   },
-  highlightedLeaderboardEntry: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    backgroundColor: '#E3FCEF', // Light green background for the current user
-    borderBottomWidth: 1,
-    borderBottomColor: '#DDE2E5',
-    alignItems: 'center',
-  },
   competitionDetails: {
     width: '100%',
     alignItems: 'flex-start',
@@ -263,7 +266,7 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 20,
     backgroundColor: '#F0F4F8',
-    paddingTop: 30, // Added padding to top to start from the top
+    paddingTop: 30, 
   },
   header: {
     flexDirection: 'row',
@@ -296,6 +299,18 @@ const styles = StyleSheet.create({
     color: 'white',
     fontWeight: 'bold',
   },
+  endDateText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: 'black', 
+    marginBottom: 20,
+    textAlign: 'justify',
+  },
+  endDateValue: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: 'blue', 
+  },  
 });
 
 export default CompetitionsScreen;

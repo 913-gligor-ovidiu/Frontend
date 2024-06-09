@@ -126,7 +126,7 @@ const ProfilePage = () => {
                                 <Card.Content>
                                     <View style={styles.workoutHeader}>
                                         <Text style={styles.workoutDate}>{format(new Date(workout.date), 'PPP')}</Text>
-                                        <Text style={styles.workoutDuration}>Duration: {workout.durationInSeconds} secs</Text>
+                                        <Text style={styles.workoutDuration}>Duration: {workout.durationInSeconds} seconds</Text>
                                     </View>
                                     <Text style={styles.workoutDetailHeader}>Points: {workout.points}</Text>
                                     {renderWorkoutDetail(groupDetailsByName(workout.details))}

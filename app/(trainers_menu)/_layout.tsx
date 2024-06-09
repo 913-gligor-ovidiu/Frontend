@@ -13,7 +13,7 @@ export default () => {
                 }}
             />
             <Tabs.Screen 
-                name="competitions"
+                name="competitions_menu"
                 options={{
                     tabBarLabel: 'Competitions',
                     headerTitle: 'Manage Competitions',
@@ -29,10 +29,10 @@ export default () => {
                 }}
             />
             <Tabs.Screen
-                name="create_competition"
+                name="[id]"
                 options={{
                     href: null,
-                    headerTitle: 'Create Competition',
+                    headerShown: false
                 }}
             />
         </Tabs>

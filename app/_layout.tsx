@@ -9,7 +9,7 @@ const StackLayout = () => {
     const router = useRouter();
 
     useEffect(() => {
-      let isMounted = true; // Flag to track mounted state
+      let isMounted = true; 
   
       const checkLogin = async () => {
         const token = await SecureStore.getItemAsync('token');
@@ -18,18 +18,16 @@ const StackLayout = () => {
         if (isMounted && token && userJson) {
           const user = JSON.parse(userJson);
           if (user.isAdmin) {
-            router.replace('/users'); // Admins go to the trainers menu
+            router.replace('/users'); 
           } else {
-            router.replace('/workout'); // Regular users go to the users menu
+            router.replace('/workout'); 
           }
         } else if (isMounted) {
-          router.replace('/'); // Not logged in, show login
+          router.replace('/'); 
         }
       };
   
       checkLogin();
-  
-      // Cleanup function to set isMounted to false when the component unmounts
       return () => {
         isMounted = false;
       };

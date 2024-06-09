@@ -16,15 +16,15 @@ export const loginUser = async (userData) => {
 
     if (response.ok) {
       const data = await response.json();
-      await SecureStore.setItemAsync('token', data.token);  // Save the token securely
-      await SecureStore.setItemAsync('user', JSON.stringify(data.user));  // Save user details securely
-      return data;  // Return the full data for further processing
+      await SecureStore.setItemAsync('token', data.token);  
+      await SecureStore.setItemAsync('user', JSON.stringify(data.user));  
+      return data;  
     } else {
       const errorMessage = await response.text();
-      return errorMessage;  // Return error message
+      return errorMessage;  
     }
   } catch (error) {
     console.error('Error during login:', error);
-    return error.message;  // Return error message
+    return error.message;  
   }
 };

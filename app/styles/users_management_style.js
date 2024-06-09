@@ -4,7 +4,7 @@ export const styles = StyleSheet.create({
     userAppointment: {
         fontSize: 14,
         marginTop: 4,
-        color: '#555', // a lighter shade than the name to distinguish the text
+        color: '#555', 
     },
     container: {
         flex: 1,
@@ -49,7 +49,7 @@ export const styles = StyleSheet.create({
         paddingVertical: 8,
         paddingHorizontal: 16,
         borderRadius: 5,
-        alignSelf: 'center', // Align button to the center of the container vertically
+        alignSelf: 'center', 
       },
       disableButtonText: {
         color: 'white',

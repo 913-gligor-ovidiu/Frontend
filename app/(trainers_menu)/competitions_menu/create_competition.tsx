@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, Pressable, Modal, StyleSheet, Button, Platform, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
-import { createCompetition } from '../Logic/createCompetitionService';
-import { publish } from '../event';
+import { createCompetition } from '../../Logic/createCompetitionService';
+import { publish } from '../../event';
 import DropDownPicker from 'react-native-dropdown-picker';
 import { CheckBox } from '@rneui/base';
 
@@ -107,14 +107,14 @@ const CreateCompetitionPage = () => {
             description,
             startDate: startDate.toISOString(),
             endDate: endDate.toISOString(),
-            machines: competitionType !== 'Cardio' ? machines : [], // Only include machines for Strength or Mixed
+            machines: competitionType !== 'Cardio' ? machines : [], 
         };
         console.log('Competition Data:', competitionData);
         const result = await createCompetition(competitionData);
         if (result.success) {
             alert('Competition Created Successfully');
             publish('competitionCreated');  
-            router.push('/competitions')
+            router.navigate('/competitions_menu/competitions');
         } else {
             alert('Failed to create competition: ' + result.message);
         }
@@ -157,11 +157,14 @@ const CreateCompetitionPage = () => {
                     setValue={setCompetitionType}
                     placeholder="Select Competition Type"
                     style={styles.picker}
+                    dropDownContainerStyle={styles.pickerDropdown}
+                    placeholderStyle={styles.placeholderStyle}
+                    textStyle={styles.pickerTextStyle}
                 />
             </View>
             {competitionType && competitionType !== 'Cardio' && (
                 <View style={styles.inputContainer}>
-                    <Text>Select Machines:</Text>
+                    <Text style={styles.label}>Select Machines:</Text>
                     {MACHINE_OPTIONS.map((machine) => (
                         <CheckBox
                             key={machine.value}
@@ -169,29 +172,30 @@ const CreateCompetitionPage = () => {
                             checked={machines.includes(machine.value)}
                             onPress={() => handleMachineChange(machine.value)}
                             containerStyle={styles.checkboxContainer}
+                            textStyle={styles.checkboxText}
                         />
                     ))}
                 </View>
             )}
             <View style={styles.inputContainer}>
                 <Pressable onPress={() => setShowStartDatePicker(true)} style={styles.datePickerButton}>
-                    <Text>Select Start Date</Text>
+                    <Text style={styles.datePickerText}>Select Start Date</Text>
                 </Pressable>
-                <Text>Start Date: {formatDate(startDate)}</Text>
+                <Text style={styles.dateText}>Start Date: {formatDate(startDate)}</Text>
                 {renderDatePickerModal('start')}
             </View>
             <View style={styles.inputContainer}>
                 <Pressable onPress={() => setShowEndDatePicker(true)} style={styles.datePickerButton}>
-                    <Text>Select End Date</Text>
+                    <Text style={styles.datePickerText}>Select End Date</Text>
                 </Pressable>
-                <Text>End Date: {formatDate(endDate)}</Text>
+                <Text style={styles.dateText}>End Date: {formatDate(endDate)}</Text>
                 {renderDatePickerModal('end')}
             </View>
             <Pressable onPress={submitCompetition} style={styles.createButton}>
                 <Text style={styles.buttonText}>Create Competition</Text>
             </Pressable>
-            <Pressable onPress={() => router.push('/competitions')} style={styles.backButton}>
-                <Text>Back</Text>
+            <Pressable onPress={() => router.navigate('/competitions_menu/competitions')} style={styles.backButton}>
+                <Text style={styles.backButtonText}>Back</Text>
             </Pressable>
         </ScrollView>
     );
@@ -203,12 +207,13 @@ const styles = StyleSheet.create({
         justifyContent: 'flex-start',
         alignItems: 'center',
         padding: 20,
-        backgroundColor: '#f5f5f5',
+        backgroundColor: '#111827', 
     },
     title: {
         fontSize: 24,
         marginBottom: 20,
         textAlign: 'center',
+        color: '#F3F4F6', 
     },
     inputContainer: {
         width: '100%',
@@ -219,14 +224,15 @@ const styles = StyleSheet.create({
         width: '100%',
         marginBottom: 20,
         paddingHorizontal: 10,
-        zIndex: 1000, // Ensure the dropdown is above other elements
+        zIndex: 1000, 
     },
     input: {
         height: 40,
         borderWidth: 1,
         borderColor: '#ccc',
         paddingHorizontal: 10,
-        backgroundColor: 'white',
+        backgroundColor: '#1F2937', 
+        color: '#F3F4F6', 
         width: '100%',
     },
     descriptionInput: {
@@ -235,6 +241,18 @@ const styles = StyleSheet.create({
     picker: {
         height: 50,
         width: '100%',
+        backgroundColor: '#1F2937', 
+        borderColor: '#ccc',
+    },
+    pickerDropdown: {
+        backgroundColor: '#1F2937', 
+        borderColor: '#ccc',
+    },
+    placeholderStyle: {
+        color: '#F3F4F6', 
+    },
+    pickerTextStyle: {
+        color: '#F3F4F6', 
     },
     checkboxContainer: {
         width: '100%',
@@ -243,19 +261,31 @@ const styles = StyleSheet.create({
         borderWidth: 0,
         padding: 0,
     },
+    checkboxText: {
+        color: '#F3F4F6', 
+    },
     datePickerButton: {
         marginVertical: 10,
         padding: 10,
-        backgroundColor: '#ddd',
+        backgroundColor: '#1F2937',
         alignItems: 'center',
         width: '100%',
+    },
+    datePickerText: {
+        color: '#F3F4F6', 
+    },
+    dateText: {
+        color: '#E5E7EB', 
     },
     backButton: {
         marginTop: 10,
         padding: 10,
-        backgroundColor: '#ddd',
+        backgroundColor: '#1F2937', 
         alignItems: 'center',
         width: '100%',
+    },
+    backButtonText: {
+        color: '#F3F4F6', 
     },
     centeredView: {
         flex: 1,
@@ -265,7 +295,7 @@ const styles = StyleSheet.create({
     },
     modalView: {
         margin: 20,
-        backgroundColor: 'white',
+        backgroundColor: '#1F2937', 
         borderRadius: 20,
         padding: 35,
         alignItems: 'center',
@@ -281,7 +311,7 @@ const styles = StyleSheet.create({
     },
     createButton: {
         marginTop: 20,
-        backgroundColor: 'blue',
+        backgroundColor: '#2563EB', 
         padding: 10,
         alignItems: 'center',
         width: '100%',
@@ -292,6 +322,7 @@ const styles = StyleSheet.create({
     label: {
         marginBottom: 5,
         fontSize: 16,
+        color: '#F3F4F6', 
     },
 });
 
