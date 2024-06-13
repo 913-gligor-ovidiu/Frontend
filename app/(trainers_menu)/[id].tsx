@@ -50,6 +50,7 @@ const renderWorkoutDetail = (groupedDetails) => {
     return Object.keys(groupedDetails).map((name, index) => (
         <View key={name + index} style={styles.detailGroupContainer}>
             <Text style={styles.workoutDetailHeader}>{name}</Text>
+            <Text>Duration: {groupedDetails[name][0]['time']} seconds</Text>
             {groupedDetails[name].map((detail, detailIndex) => (
                 <View key={`${name}-${detailIndex}`} style={styles.detailContainer}>
                     {detail.reps && <Text style={styles.workoutDetail}>Reps: {detail.reps}</Text>}
@@ -58,7 +59,7 @@ const renderWorkoutDetail = (groupedDetails) => {
                     {detail.avgSpeed && <Text style={styles.workoutDetail}>Avg Speed: {detail.avgSpeed} km/h</Text>}
                     {detail.maxSpeed && <Text style={styles.workoutDetail}>Max Speed: {detail.maxSpeed} km/h</Text>}
                     {detail.caloriesBurned && <Text style={styles.workoutDetail}>Calories Burned: {detail.caloriesBurned}</Text>}
-                    {detail.time && <Text style={styles.workoutDetail}>Time: {detail.time} seconds</Text>}
+                    <Text style={styles.workoutDetail}>Points: {detail.points}</Text>
                 </View>
             ))}
         </View>

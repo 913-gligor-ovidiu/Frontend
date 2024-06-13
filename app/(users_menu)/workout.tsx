@@ -244,7 +244,7 @@ const WorkoutsScreen = () => {
               avgSpeed: 0,
               maxSpeed: 0,
               caloriesBurned: 0,
-              time: 0
+              time: ex.time || 0
           }));
       } else if (ex.type === "Cardio") {
           return [{
@@ -379,6 +379,7 @@ const WorkoutsScreen = () => {
           {workoutData.map((exercise, index) => (
             <View key={index} style={styles.exerciseContainer}>
               <Text style={styles.exerciseTitle}>{exercise.exercise}</Text>
+              <Text style={styles.exerciseTitle}>Duration: {exercise.time} seconds</Text>
               {exercise.type === "Strength" && exercise.repsPerSet.map((rep, setIndex) => (
                 <View key={setIndex} style={styles.setRow}>
                   <Text>Set {setIndex + 1}</Text>
@@ -392,7 +393,6 @@ const WorkoutsScreen = () => {
                   <Text>Average Speed: {exercise.avgSpeed} km/h</Text>
                   <Text>Max Speed: {exercise.maxSpeed} km/h</Text>
                   <Text>Calories Burned: {exercise.calories} kcal</Text>
-                  <Text>Time: {exercise.time} seconds</Text>
                 </View>
               )}
             </View>

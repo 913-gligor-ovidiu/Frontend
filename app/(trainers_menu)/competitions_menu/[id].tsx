@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, StyleSheet, ActivityIndicator, Alert, FlatList, Pressable, TouchableOpacity } from 'react-native';
-import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useRouter, useLocalSearchParams, router } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
 import axios from 'axios';
 import Icon from 'react-native-vector-icons/Ionicons';
@@ -85,7 +85,7 @@ const CompetitionDetails = () => {
             <Pressable
                 style={styles.entryContent}
                 onPress={() => {
-                    // Navigate to user details or perform any action
+                    router.navigate(`(trainers_menu)/${item.userId}`);
                 }}>
                 <Text style={styles.username}>{item.username}</Text>
                 <Text style={styles.score}>{item.points} points   </Text>

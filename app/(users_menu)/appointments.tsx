@@ -5,6 +5,7 @@ import * as SecureStore from 'expo-secure-store';
 import axios from 'axios';
 import { API_URL } from '../constants';
 import MachineBookingModal from '../components/MachineBookingModal';
+import ScheduleModal from '../components/ScheduleModal';
 
 const AppointmentsScreen = () => {
   const [userId, setUserId] = useState(null);
@@ -16,6 +17,7 @@ const AppointmentsScreen = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedHour, setSelectedHour] = useState(null);
   const [hourlySlots, setHourlySlots] = useState([]);
+  const [scheduleModalVisible, setScheduleModalVisible] = useState(false);
 
   const fetchAppointments = async () => {
     try {
@@ -30,7 +32,6 @@ const AppointmentsScreen = () => {
 
       const allAppointmentsResponse = await axios.get(`${API_URL}/Appointments`, config);
       const allAppointments = allAppointmentsResponse.data;
-      console.log('All Appointments:', allAppointments);
 
       const formattedData = {};
       allAppointments.forEach(appointment => {
@@ -216,11 +217,8 @@ const AppointmentsScreen = () => {
 
   const generateHourlySlots = (dateString) => {
     const slots = [];
-    console.log('Appointments data for', dateString, ':', appointmentsData[dateString]);
-
     for (let hour = workingHours.startHour; hour < workingHours.endHour; hour++) {
       const hourlyData = appointmentsData[dateString]?.find(slot => slot.hour === hour)?.machineAvailabilities || [];
-      console.log('Hourly data for', hour, ':', hourlyData);
 
       const hourSlots = machines.map(machine => {
         const machineData = hourlyData.find(data => data.machineId === machine.id) || {};
@@ -236,6 +234,10 @@ const AppointmentsScreen = () => {
     }
 
     return slots;
+  };
+
+  const showSchedule = () => {
+    setScheduleModalVisible(true);
   };
 
   return (
@@ -274,23 +276,28 @@ const AppointmentsScreen = () => {
         }}
       />
       {selectedDate && (
-        <ScrollView style={styles.scrollView}>
-          <Text style={styles.subtitle}>Available slots for {selectedDate}:</Text>
-          {hourlySlots.map((slot, index) => (
-            <TouchableOpacity
-              key={`${slot.hour}-${index}`}
-              style={[
-                styles.hourSlot,
-                userHasAppointment(slot.hour) ? styles.userAppointmentSlot : null
-              ]}
-              onPress={() => handleHourPress(slot.hour)}
-            >
-              <Text style={styles.hourText}>{`${slot.hour}:00`}</Text>
-              {userHasAppointment(slot.hour) && (
-                <Text style={styles.cancelText}>Cancel appointment</Text>
-              )}
-            </TouchableOpacity>
-          ))}
+        <ScrollView>
+          <TouchableOpacity style={styles.button} onPress={showSchedule}>
+            <Text style={styles.buttonText}>View Schedule for  {selectedDate}</Text>
+          </TouchableOpacity>
+          <ScrollView style={styles.scrollView}>
+            <Text style={styles.subtitle}>Available slots for {selectedDate}:</Text>
+            {hourlySlots.map((slot, index) => (
+              <TouchableOpacity
+                key={`${slot.hour}-${index}`}
+                style={[
+                  styles.hourSlot,
+                  userHasAppointment(slot.hour) ? styles.userAppointmentSlot : null
+                ]}
+                onPress={() => handleHourPress(slot.hour)}
+              >
+                <Text style={styles.hourText}>{`${slot.hour}:00`}</Text>
+                {userHasAppointment(slot.hour) && (
+                  <Text style={styles.cancelText}>Cancel appointment</Text>
+                )}
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
         </ScrollView>
       )}
       <MachineBookingModal
@@ -300,6 +307,14 @@ const AppointmentsScreen = () => {
         machines={machines}
         slots={hourlySlots.find(slot => slot.hour === selectedHour)?.slots || []}
         onBook={bookAppointment}
+      />
+      <ScheduleModal
+        visible={scheduleModalVisible}
+        onClose={() => setScheduleModalVisible(false)}
+        date={selectedDate}
+        machines={machines}
+        appointmentsData={appointmentsData[selectedDate] || []}
+        workingHours={workingHours}
       />
     </View>
   );
@@ -335,6 +350,17 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
     elevation: 5,
+  },
+  button: {
+    backgroundColor: '#2a9d8f',
+    padding: 10,
+    borderRadius: 5,
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  buttonText: {
+    color: '#fff',
+    fontSize: 16,
   },
   scrollView: {
     marginTop: 20,

@@ -1,9 +1,10 @@
-import { Pressable, StyleSheet, Text, TextInput, View, ScrollView } from "react-native";
+import { Pressable, StyleSheet, Text, TextInput, View, ScrollView, LogBox } from "react-native";
 import { useState } from "react"; 
 import { Link, useRouter } from "expo-router";
 import { styles } from "./styles/register_style"; 
 import { loginUser } from "./Logic/loginService";
 import * as SecureStore from 'expo-secure-store';
+LogBox.ignoreLogs(['Failed prop type: Invalid prop `textStyle` of type `array` supplied to `Cell`, expected `object`.']);
 
 const LoginPage = () => {
   const router = useRouter();
