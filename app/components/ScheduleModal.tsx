@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, Modal, StyleSheet, TouchableOpacity, ScrollView, SafeAreaView, Image } from 'react-native';
+import { green } from 'react-native-reanimated/lib/typescript/reanimated2/Colors';
 import { Table, TableWrapper, Row, Cell } from 'react-native-table-component';
 
 const exerciseImages = {
@@ -37,8 +38,12 @@ const ScheduleModal = ({ visible, onClose, date, machines, appointmentsData, wor
 
   const { tableHead, widthArr, tableData } = renderScheduleTable();
 
-  const renderCell = (data, index) => (
-    <View style={[styles.cell, (data === '0/4' || data === '0/2') && styles.redCell]}>
+  const renderCell = (data, cellIndex, rowIndex) => (
+    <View style={[
+      styles.cell, 
+      cellIndex !== 0 && data !== '0/4' && data !== '0/2' && styles.greenCell, 
+      cellIndex !== 0 && (data === '0/4' || data === '0/2') && styles.redCell
+    ]}>
       <Text style={styles.text}>
         {data}
       </Text>
@@ -84,7 +89,7 @@ const ScheduleModal = ({ visible, onClose, date, machines, appointmentsData, wor
                       {rowData.map((cellData, cellIndex) => (
                         <Cell
                           key={cellIndex}
-                          data={renderCell(cellData, cellIndex)}
+                          data={renderCell(cellData, cellIndex, index)}
                           width={widthArr[cellIndex]}
                         />
                       ))}
@@ -148,6 +153,9 @@ const styles = StyleSheet.create({
   },
   redCell: {
     backgroundColor: 'red',
+  },
+  greenCell: {  
+    backgroundColor: 'green',
   },
   cell: {
     justifyContent: 'center',

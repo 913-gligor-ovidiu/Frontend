@@ -197,7 +197,7 @@ const WorkoutsScreen = () => {
       if(generatedExerciseData.type === "Strength" && generatedExerciseData.repsPerSet.length > 0) {
         setWorkoutData(prevWorkoutData => [...prevWorkoutData, generatedExerciseData]);
       }
-      else if(generatedExerciseData.type === "Cardio" && generatedExerciseData.distance.time > 120) {
+      else if(generatedExerciseData.type === "Cardio" && generatedExerciseData.time > 10) {
         setWorkoutData(prevWorkoutData => [...prevWorkoutData, generatedExerciseData]);
        }
 
